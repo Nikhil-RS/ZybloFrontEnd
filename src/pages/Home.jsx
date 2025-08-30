@@ -5,6 +5,8 @@ import axios from 'axios';
 
 export default function Home() {
   const [customers, setCustomers] = useState([]);
+  const [search, setSearch] = useState('');
+  const [gender, setGender] = useState('');
   
   const [counts, setCounts] = useState({
     customers: 0,
@@ -43,8 +45,6 @@ export default function Home() {
     };
 
     fetchCounts();
-  }, []);
-   useEffect(() => {
     fetchCustomers();
   }, []);
 
@@ -55,7 +55,6 @@ export default function Home() {
       },
     })
       .then(res => {
-        console.log("API response:", res.data); // debug
         const data = Array.isArray(res.data)
           ? res.data
           : res.data.results || res.data.data || [];
@@ -64,62 +63,98 @@ export default function Home() {
       .catch(err => console.error('Error fetching customers:', err));
   };
 
+  const filteredCustomers = customers.filter(customer => {
+    return (
+      (search === '' || customer.full_name?.toLowerCase().includes(search.toLowerCase())) &&
+      (gender === '' || customer.gender === gender)
+    );
+  });
+
   return (
     <div style={{ background: '#f6f7fa', minHeight: '100vh', padding: '0 24px' }}>
+      {/* Navbar */}
       <nav className="d-flex align-items-center justify-content-between py-3">
         <div className="d-flex align-items-center">
           <i className="bi bi-list" style={{ fontSize: 28, marginRight: 16 }}></i>
-          
         </div>
         <div className="d-flex align-items-center gap-2">
           <i className="bi bi-search" style={{ fontSize: 20, marginRight: 24 }}></i>
           <div className="d-flex align-items-center" style={{ gap: 10 }}>
-            
             <i className="bi bi-caret-down-fill ms-2"></i>
           </div>
         </div>
       </nav>
       
+      {/* Summary Cards */}
       <div className="d-flex gap-3 mt-4 flex-wrap">
         <Card title="Total Managers" count={counts.managers} icon="bi-person" iconColor="green" />
         <Card title="Total Staffs" count={counts.staffs} icon="bi-people" iconColor="red" />
         <Card title="Total Customers" count={counts.customers} icon="bi-briefcase" iconColor="#2992f0" />
         <Card title="Total Departments" count={counts.departments} icon="bi-archive" iconColor="#ff9500" />
       </div>
-      <table className="table table-bordered mt-3">
-        <thead>
-          <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Gender</th>
-            <th>Date of Birth</th>
-          </tr>
-        </thead>
-        <tbody>
-          {customers.length === 0 ? (
+
+      {/* Filters */}
+      <div className="row align-items-center mt-4">
+        <div className="col-md-6 mb-2">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="col-md-3 mb-2">
+          <select
+            className="form-select"
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+          >
+            <option value="">All Genders</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Customers Table */}
+      <div className="table-responsive mt-3">
+        <table className="table table-bordered table-hover align-middle">
+          <thead className="table-light">
             <tr>
-              <td colSpan="5" className="text-center">No customers found</td>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Gender</th>
+              <th>Date of Birth</th>
+              <th>Added on</th>
             </tr>
-          ) : (
-            customers.map(customer => (
-              <tr key={customer.id}>
-                <td>{customer.full_name}</td>
-                <td>{customer.email || '-'}</td>
-                <td>{customer.phone || '-'}</td>
-                <td>{customer.gender}</td>
-                <td>
-                  {customer.date_of_birth
-                    ? new Date(customer.date_of_birth).toLocaleDateString()
-                    : '-'}
-                </td>
+          </thead>
+          <tbody>
+            {filteredCustomers.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center text-muted">No customers found</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              filteredCustomers.map(customer => (
+                <tr key={customer.id}>
+                  <td>{customer.full_name}</td>
+                  <td>{customer.email || '-'}</td>
+                  <td>{customer.phone || '-'}</td>
+                  <td>{customer.gender}</td>
+                  <td>
+                    {customer.date_of_birth
+                      ? new Date(customer.date_of_birth).toLocaleDateString()
+                      : '-'}
+                  </td>
+                  <td>{customer.added_on}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-    
   );
 }
 

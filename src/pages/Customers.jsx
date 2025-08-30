@@ -13,30 +13,45 @@ export default function Customers() {
   const [customers, setCustomers] = useState([]);
   const [message, setMessage] = useState('');
 
+  // 🔹 filter states
+  const [search, setSearch] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
   // Fetch customers on mount
   useEffect(() => {
     fetchCustomers();
   }, []);
 
-  const fetchCustomers = () => {
-    axios.get('http://127.0.0.1:8000/api/customers/', {
-      headers: {
-        Authorization: 'Bearer ' + localStorage.getItem('access_token'),
-      },
-    })
-      .then(res => {
-        console.log("API response:", res.data); // debug
+  const fetchCustomers = (filters = {}) => {
+    axios
+      .get('http://127.0.0.1:8000/api/customers/', {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('access_token'),
+        },
+        params: filters, // pass query params
+      })
+      .then((res) => {
+        console.log('API response:', res.data); // debug
         const data = Array.isArray(res.data)
           ? res.data
           : res.data.results || res.data.data || [];
         setCustomers(data);
       })
-      .catch(err => console.error('Error fetching customers:', err));
+      .catch((err) => console.error('Error fetching customers:', err));
+  };
+
+  const handleFilter = () => {
+    fetchCustomers({
+      q: search,
+      start_date: fromDate,
+      end_date: toDate,
+    });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -53,7 +68,13 @@ export default function Customers() {
         },
       });
       setMessage('Customer added successfully!');
-      setForm({ full_name: '', email: '', phone: '', gender: '', date_of_birth: '' });
+      setForm({
+        full_name: '',
+        email: '',
+        phone: '',
+        gender: '',
+        date_of_birth: '',
+      });
       setShowModal(false);
       fetchCustomers();
     } catch (error) {
@@ -72,7 +93,13 @@ export default function Customers() {
   };
 
   const closeModal = () => {
-    setForm({ full_name: '', email: '', phone: '', gender: '', date_of_birth: '' });
+    setForm({
+      full_name: '',
+      email: '',
+      phone: '',
+      gender: '',
+      date_of_birth: '',
+    });
     setShowModal(false);
   };
 
@@ -80,16 +107,52 @@ export default function Customers() {
     <div className="container mt-4">
       <h1>Customers</h1>
 
-      <button className="btn btn-primary mb-3" onClick={openModal}>Add Customer</button>
+      <button className="btn btn-primary mb-3" onClick={openModal}>
+        Add Customer
+      </button>
 
+      {/* 🔹 Filter Bar */}
+      <div className="d-flex gap-2 mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <input
+          type="date"
+          className="form-control"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+        />
+        <input
+          type="date"
+          className="form-control"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+        />
+        <button className="btn btn-dark" onClick={handleFilter}>
+          Apply
+        </button>
+      </div>
+
+      {/* Modal for adding customer */}
       {showModal && (
-        <div className="modal show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div
+          className="modal show"
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <form onSubmit={handleSubmit}>
                 <div className="modal-header">
                   <h5 className="modal-title">Add Customer</h5>
-                  <button type="button" className="btn-close" onClick={closeModal}></button>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeModal}
+                  ></button>
                 </div>
 
                 <div className="modal-body">
@@ -144,8 +207,16 @@ export default function Customers() {
                 </div>
 
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                  <button type="submit" className="btn btn-primary">Add</button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={closeModal}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Add
+                  </button>
                 </div>
               </form>
             </div>
@@ -153,6 +224,7 @@ export default function Customers() {
         </div>
       )}
 
+      {/* Table */}
       <table className="table table-bordered mt-3">
         <thead>
           <tr>
@@ -161,15 +233,18 @@ export default function Customers() {
             <th>Phone</th>
             <th>Gender</th>
             <th>Date of Birth</th>
+            <th>Added on</th>
           </tr>
         </thead>
         <tbody>
           {customers.length === 0 ? (
             <tr>
-              <td colSpan="5" className="text-center">No customers found</td>
+              <td colSpan="6" className="text-center">
+                No customers found
+              </td>
             </tr>
           ) : (
-            customers.map(customer => (
+            customers.map((customer) => (
               <tr key={customer.id}>
                 <td>{customer.full_name}</td>
                 <td>{customer.email || '-'}</td>
@@ -178,6 +253,11 @@ export default function Customers() {
                 <td>
                   {customer.date_of_birth
                     ? new Date(customer.date_of_birth).toLocaleDateString()
+                    : '-'}
+                </td>
+                <td>
+                  {customer.added_on
+                    ? new Date(customer.added_on).toLocaleString()
                     : '-'}
                 </td>
               </tr>

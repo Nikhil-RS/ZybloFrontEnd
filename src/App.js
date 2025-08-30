@@ -112,7 +112,7 @@ function App() {
             </div>
           </div>
           <div className="d-flex align-items-center">
-            <i className="bi bi-search me-3" style={{ fontSize: '1.2rem' }}></i>
+            
             <img
               src="https://i.pravatar.cc/40"
               alt="avatar"

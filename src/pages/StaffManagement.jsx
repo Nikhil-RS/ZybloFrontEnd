@@ -8,7 +8,7 @@ export default function StaffManagers() {
     email: "",
     phone: "",
     skills: "",
-    manager_id: "", // matches serializer
+    manager_id: "",
   });
   const [managers, setManagers] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -16,7 +16,10 @@ export default function StaffManagers() {
   const [errors, setErrors] = useState({});
   const [showModal, setShowModal] = useState(false);
 
-  // Fetch managers for dropdown
+  // 🔹 New filter state
+  const [filter, setFilter] = useState("");
+
+  // Fetch managers
   useEffect(() => {
     axios
       .get("http://127.0.0.1:8000/api/managers/", {
@@ -26,7 +29,7 @@ export default function StaffManagers() {
       .catch((err) => console.error("Error fetching managers:", err));
   }, []);
 
-  // Fetch staff list
+  // Fetch staff
   const fetchStaffList = () => {
     axios
       .get("http://127.0.0.1:8000/api/staff/", {
@@ -84,7 +87,7 @@ export default function StaffManagers() {
     }
   };
 
-  // Open/close modal
+  // Modal open/close
   const openModal = () => {
     setShowModal(true);
     setMessage("");
@@ -96,11 +99,28 @@ export default function StaffManagers() {
     setShowModal(false);
   };
 
+  // 🔹 Filtered staff list
+  const filteredStaff = staffList.filter((staff) =>
+    (staff.full_name?.toLowerCase() || "").includes(filter.toLowerCase()) ||
+    (staff.email?.toLowerCase() || "").includes(filter.toLowerCase()) ||
+    (staff.skills?.toLowerCase() || "").includes(filter.toLowerCase()) ||
+    (staff.manager?.full_name?.toLowerCase() || "").includes(filter.toLowerCase())
+  );
+
   return (
     <div className="container mt-4">
       <button className="btn btn-primary mb-3" onClick={openModal}>
         + Add Staff
       </button>
+
+      {/* 🔹 Search filter */}
+      <input
+        type="text"
+        className="form-control mb-3"
+        placeholder="Search by name, email, skills, or manager..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
 
       {/* Add Staff Modal */}
       {showModal && (
@@ -202,25 +222,25 @@ export default function StaffManagers() {
             <th>Phone</th>
             <th>Skills</th>
             <th>Manager</th>
+            <th>Joined on</th>
           </tr>
         </thead>
         <tbody>
-          {staffList.length === 0 ? (
+          {filteredStaff.length === 0 ? (
             <tr>
-              <td colSpan="5" className="text-center">
+              <td colSpan="6" className="text-center">
                 No staff members found
               </td>
             </tr>
           ) : (
-            staffList.map((staff) => (
+            filteredStaff.map((staff) => (
               <tr key={staff.id}>
                 <td>{staff.full_name}</td>
                 <td>{staff.email}</td>
                 <td>{staff.phone}</td>
                 <td>{staff.skills}</td>
-                <td>
-                  {staff.manager?.full_name || staff.manager_id || "-"}
-                </td>
+                <td>{staff.manager?.full_name || staff.manager_id || "-"}</td>
+                <td>{staff.joined_on}</td>
               </tr>
             ))
           )}
