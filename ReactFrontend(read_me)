@@ -1,0 +1,45 @@
+
+# React Frontend – CRM Dashboard
+
+## Overview
+This is the frontend React application for the Django React CRM Dashboard project.  
+It provides a responsive UI with Bootstrap for managing Customers, Managers, Staff, and Departments.
+
+## Tech Stack
+- React (Functional Components + Hooks)
+- Axios for API requests
+- Bootstrap & Bootstrap Icons for styling
+
+## Setup Instructions
+```bash
+cd frontend
+npm install
+npm start
+```
+
+## Features
+- Login with JWT authentication (SimpleJWT backend)
+- Dashboard with realtime entity counts
+- Tables to display Customers, Managers, Staff, and Departments
+- Modal forms to add new records
+- Defensive coding (e.g., `Array.isArray()` before `.map`)
+
+## Example
+### Fetching Dashboard Counts
+```javascript
+axios.get('/api/customers/count/', {
+  headers: { Authorization: `Bearer ${token}` }
+}).then(res => setCustomerCount(res.data.count));
+```
+
+### Example Card Component
+A simple Bootstrap card displaying entity counts.
+
+### Example Modal
+Bootstrap modal form for adding new customers.
+
+## Deployment Notes
+- Use environment variables for API base URL in production.
+- Ensure CORS is configured in Django backend (`django-cors-headers`).
+
+---
